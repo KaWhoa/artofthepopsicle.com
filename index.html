@@ -1,11 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Art of the Popsicle LLC</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art of the Popsicle — Design & Digital Craft</title>
+<meta name="description" content="Art of the Popsicle LLC — Product Strategy, Systems & Software, Interface & Identity.">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --coral:#F2495C;
+    --yellow:#FFC72C;
+    --green:#7CB518;
+    --wood:#D9A876;
+    --ink:#1C1C1C;
+    --ink-soft:#5B5B5B;
+    --white:#FFFFFF;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html, body{
+    height:100%;
+    background:var(--white);
+    overflow:hidden;
+  }
+
+  body{
+    font-family:'Inter', sans-serif;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    width:100vw;
+  }
+
+  .page{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:clamp(10px, 2vh, 22px);
+    padding:4vh 6vw;
+    width:100%;
+    max-width:760px;
+  }
+
+  .logo{
+    width:clamp(48px, 7vh, 76px);
+    height:auto;
+    display:block;
+  }
+
+  .name{
+    font-family:'Zilla Slab', serif;
+    font-weight:600;
+    font-size:clamp(28px, 4.6vh, 46px);
+    letter-spacing:0.01em;
+    color:var(--ink);
+    line-height:1.05;
+  }
+
+  .tagline{
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size:clamp(12px, 1.6vh, 15px);
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  .stripe{
+    display:flex;
+    height:4px;
+    width:clamp(90px, 12vh, 130px);
+    border-radius:2px;
+    overflow:hidden;
+    margin:clamp(2px, 0.6vh, 8px) 0;
+  }
+  .stripe span{ flex:1; }
+  .stripe span:nth-child(1){ background:var(--coral); }
+  .stripe span:nth-child(2){ background:var(--yellow); }
+  .stripe span:nth-child(3){ background:var(--green); }
+
+  .services{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(14px, 2.6vw, 32px);
+    flex-wrap:wrap;
+    margin-top:clamp(4px, 1vh, 10px);
+  }
+
+  .service{
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size:clamp(12px, 1.7vh, 15px);
+    letter-spacing:0.02em;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+
+  .dot{
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    background:var(--wood);
+    flex:none;
+  }
+
+  .contact{
+    margin-top:clamp(10px, 2.4vh, 26px);
+    font-family:'Inter', sans-serif;
+    font-weight:500;
+    font-size:clamp(13px, 1.8vh, 16px);
+    color:var(--ink-soft);
+    text-decoration:none;
+    letter-spacing:0.01em;
+    border-bottom:1px solid transparent;
+    transition:color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .contact:hover,
+  .contact:focus-visible{
+    color:var(--ink);
+    border-bottom-color:var(--wood);
+  }
+
+  .contact:focus-visible{
+    outline:2px solid var(--green);
+    outline-offset:4px;
+    border-radius:2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .page{
+      animation:rise 0.6s ease both;
+    }
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 420px){
+    .services{
+      flex-direction:column;
+      gap:8px;
+    }
+    .dot{ display:none; }
+  }
+</style>
 </head>
 <body>
-  <h1>Art of the Popsicle LLC</h1>
-  <p>Site coming soon.</p>
+  <main class="page">
+    <img class="logo" src="logo.png" alt="Art of the Popsicle logo">
+    <h1 class="name">Art of the Popsicle</h1>
+    <p class="tagline">Design &amp; Digital Craft</p>
+    <div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="services">
+      <span class="service">Product Strategy</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="service">Systems &amp; Software</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="service">Interface &amp; Identity</span>
+    </div>
+    <a class="contact" href="mailto:hello@artofthepopsicle.com">hello@artofthepopsicle.com</a>
+  </main>
 </body>
 </html>
