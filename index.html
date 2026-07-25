@@ -54,6 +54,20 @@
     width:clamp(48px, 7vh, 76px);
     height:auto;
     display:block;
+    transform-origin:50% 88%;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .logo{
+      animation:nod 9s ease-in-out infinite;
+    }
+  }
+  @keyframes nod{
+    0%, 92%, 100%{ transform:rotate(0deg); }
+    93.5%{ transform:rotate(-6deg); }
+    95%{ transform:rotate(4deg); }
+    96.5%{ transform:rotate(-2deg); }
+    98%{ transform:rotate(0deg); }
   }
 
   .name{
