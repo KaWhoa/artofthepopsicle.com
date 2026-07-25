@@ -129,7 +129,7 @@
     width:4px;
     height:4px;
     border-radius:50%;
-    background:var(--wood);
+    background:var(--green);
     flex:none;
   }
 
@@ -171,14 +171,13 @@
     position:fixed;
     top:0;
     left:0;
-    width:9px;
-    height:9px;
-    border-radius:50% 50% 50% 50%;
+    width:6px;
+    height:6px;
+    border-radius:50%;
     background:var(--green);
     pointer-events:none;
     opacity:0;
     transform:translate(-50%, -50%);
-    transition:background-color 0.4s ease;
     will-change:transform, opacity;
     z-index:5;
   }
@@ -221,9 +220,6 @@
       var logo = document.querySelector('.logo');
       if (!drip || !logo) return;
 
-      <!-- var colors = ['#F2495C', '#FFC72C', '#7CB518'];
-      var colorIndex = 0; -->
-
       var targetX = 0, targetY = 0;
       var currentX = 0, currentY = 0;
       var radius = 100;
@@ -251,17 +247,10 @@
         }
       });
 
-      var lastSwitch = 0;
-      function tick(ts){
+      function tick(){
         currentX += (targetX - currentX) * 0.12;
         currentY += (targetY - currentY) * 0.12;
         drip.style.transform = 'translate(' + currentX + 'px, ' + currentY + 'px) translate(-50%, -50%)';
-
-        <!-- if (active && ts - lastSwitch > 900) {
-          colorIndex = (colorIndex + 1) % colors.length;
-          drip.style.background = colors[colorIndex];
-          lastSwitch = ts;
-        } -->
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
