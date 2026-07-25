@@ -240,7 +240,7 @@
           active = true;
           targetX = e.clientX;
           targetY = e.clientY + 14;
-          drip.style.opacity = String(0.55 * (1 - dist / radius));
+          drip.style.opacity = String(1 - Math.pow(dist / radius, 2));
         } else {
           active = false;
           drip.style.opacity = '0';
