@@ -59,7 +59,7 @@
 
   @media (prefers-reduced-motion: no-preference){
     .logo{
-      animation:nod 3s ease-in-out infinite;
+      animation:nod 9s ease-in-out infinite;
     }
   }
   @keyframes nod{
@@ -68,6 +68,12 @@
     95%{ transform:rotate(4deg); }
     96.5%{ transform:rotate(-2deg); }
     98%{ transform:rotate(0deg); }
+  }
+
+  .logo-wrap{
+    position:relative;
+    display:inline-block;
+    line-height:0;
   }
 
   .name{
@@ -161,6 +167,22 @@
     to{ opacity:1; transform:translateY(0); }
   }
 
+  .drip{
+    position:fixed;
+    top:0;
+    left:0;
+    width:9px;
+    height:9px;
+    border-radius:50% 50% 50% 0;
+    background:var(--coral);
+    pointer-events:none;
+    opacity:0;
+    transform:translate(-50%, -50%) rotate(45deg);
+    transition:background-color 0.4s ease;
+    will-change:transform, opacity;
+    z-index:5;
+  }
+
   @media (max-width: 420px){
     .services{
       flex-direction:column;
@@ -172,7 +194,9 @@
 </head>
 <body>
   <main class="page">
-    <img class="logo" src="logo.png" alt="Art of the Popsicle logo">
+    <div class="logo-wrap">
+      <img class="logo" src="logo.png" alt="Art of the Popsicle logo">
+    </div>
     <h1 class="name">Art of the Popsicle</h1>
     <p class="tagline">Design &amp; Digital Craft</p>
     <div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -185,5 +209,63 @@
     </div>
     <a class="contact" href="mailto:hello@artofthepopsicle.com">hello@artofthepopsicle.com</a>
   </main>
+
+  <div class="drip" id="drip" aria-hidden="true"></div>
+
+  <script>
+    (function(){
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      var drip = document.getElementById('drip');
+      var logo = document.querySelector('.logo');
+      if (!drip || !logo) return;
+
+      var colors = ['#F2495C', '#FFC72C', '#7CB518'];
+      var colorIndex = 0;
+
+      var targetX = 0, targetY = 0;
+      var currentX = 0, currentY = 0;
+      var radius = 150;
+      var active = false;
+
+      function logoCenter(){
+        var r = logo.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+
+      window.addEventListener('mousemove', function(e){
+        var c = logoCenter();
+        var dx = e.clientX - c.x;
+        var dy = e.clientY - c.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < radius) {
+          active = true;
+          targetX = e.clientX;
+          targetY = e.clientY + 14;
+          drip.style.opacity = String(0.55 * (1 - dist / radius));
+        } else {
+          active = false;
+          drip.style.opacity = '0';
+        }
+      });
+
+      var lastSwitch = 0;
+      function tick(ts){
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
+        drip.style.transform = 'translate(' + currentX + 'px, ' + currentY + 'px) translate(-50%, -50%) rotate(45deg)';
+
+        if (active && ts - lastSwitch > 900) {
+          colorIndex = (colorIndex + 1) % colors.length;
+          drip.style.background = colors[colorIndex];
+          lastSwitch = ts;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+  </script>
 </body>
 </html>
