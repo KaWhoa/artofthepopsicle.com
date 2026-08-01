@@ -189,6 +189,57 @@
     }
     .dot{ display:none; }
   }
+
+  .sparkle-burst{
+    position:fixed;
+    top:0;
+    left:0;
+    width:0;
+    height:0;
+    pointer-events:none;
+    z-index:6;
+  }
+
+  .sparkle-burst .glow{
+    position:absolute;
+    top:0;
+    left:0;
+    width:20px;
+    height:20px;
+    margin:-10px 0 0 -10px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,199,44,0.55) 45%, rgba(255,255,255,0) 72%);
+    animation:glowPulse 0.5s ease-out forwards;
+  }
+
+  .sparkle-burst .spark{
+    position:absolute;
+    top:0;
+    left:0;
+    width:9px;
+    height:9px;
+    margin:-4.5px 0 0 -4.5px;
+    clip-path:polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%);
+    opacity:0;
+    animation:sparkTwinkle 0.75s ease-out forwards;
+    animation-delay:var(--d, 0s);
+  }
+
+  @keyframes glowPulse{
+    0%{ transform:scale(0.3); opacity:0; }
+    35%{ transform:scale(1); opacity:1; }
+    100%{ transform:scale(2); opacity:0; }
+  }
+
+  @keyframes sparkTwinkle{
+    0%{ transform:translate(0, 0) scale(0) rotate(0deg); opacity:0; }
+    22%{ transform:translate(0, 0) scale(1) rotate(20deg); opacity:1; }
+    100%{ transform:translate(var(--tx), var(--ty)) scale(0.15) rotate(150deg); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sparkle-burst{ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -220,26 +271,101 @@
       var logo = document.querySelector('.logo');
       if (!drip || !logo) return;
 
+      // Position of the white dot inside logo.png, as a fraction of the
+      // rendered image box (measured from the source file: center at
+      // roughly 39.7% across, 61.3% down).
+      var DOT_X_PCT = 0.3974;
+      var DOT_Y_PCT = 0.6129;
+
       var targetX = 0, targetY = 0;
       var currentX = 0, currentY = 0;
       var radius = 100;
       var active = false;
+
+      // Push-ahead-of-cursor tracking
+      var dirX = 0, dirY = -1;      // last known movement direction (unit vector)
+      var speed = 0;                 // smoothed speed, px/ms
+      var lastMoveX = null, lastMoveY = null, lastMoveT = null;
+      var BASE_LEAD = 12;             // minimum px the dot sits ahead of the cursor, even at rest
+      var MAX_LEAD = 34;              // cap so it doesn't fly off at high speed
+      var SPEED_TO_LEAD = 45;         // how strongly speed extends the lead distance
+
+      // Alignment "easter egg"
+      var lastSparkleAt = -Infinity;
+      var SPARKLE_COOLDOWN = 1400;
 
       function logoCenter(){
         var r = logo.getBoundingClientRect();
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
       }
 
+      function logoDotTarget(){
+        var r = logo.getBoundingClientRect();
+        return { x: r.left + r.width * DOT_X_PCT, y: r.top + r.height * DOT_Y_PCT, size: r.width };
+      }
+
+      function spawnSparkles(x, y){
+        var burst = document.createElement('div');
+        burst.className = 'sparkle-burst';
+        burst.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+
+        var glow = document.createElement('div');
+        glow.className = 'glow';
+        burst.appendChild(glow);
+
+        var colors = ['#F2495C', '#FFC72C', '#7CB518', '#FFFFFF', '#FFC72C'];
+        var count = 7;
+        for (var i = 0; i < count; i++){
+          var angle = (Math.PI * 2 * i / count) + (Math.random() * 0.6 - 0.3);
+          var dist = 20 + Math.random() * 16;
+          var spark = document.createElement('div');
+          spark.className = 'spark';
+          spark.style.background = colors[i % colors.length];
+          spark.style.setProperty('--tx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+          spark.style.setProperty('--ty', (Math.sin(angle) * dist).toFixed(1) + 'px');
+          spark.style.setProperty('--d', (Math.random() * 0.08).toFixed(2) + 's');
+          burst.appendChild(spark);
+        }
+
+        document.body.appendChild(burst);
+        setTimeout(function(){ burst.remove(); }, 900);
+      }
+
       window.addEventListener('mousemove', function(e){
+        var now = performance.now();
+        var mx = e.clientX, my = e.clientY;
+
+        if (lastMoveX !== null){
+          var dt = Math.max(now - lastMoveT, 1);
+          var moveDx = mx - lastMoveX;
+          var moveDy = my - lastMoveY;
+          var moveDist = Math.sqrt(moveDx * moveDx + moveDy * moveDy);
+          var instSpeed = moveDist / dt;
+
+          speed += (instSpeed - speed) * 0.3;
+
+          if (moveDist > 0.5){
+            var nx = moveDx / moveDist;
+            var ny = moveDy / moveDist;
+            dirX += (nx - dirX) * 0.25;
+            dirY += (ny - dirY) * 0.25;
+            var dl = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+            dirX /= dl;
+            dirY /= dl;
+          }
+        }
+        lastMoveX = mx; lastMoveY = my; lastMoveT = now;
+
         var c = logoCenter();
-        var dx = e.clientX - c.x;
-        var dy = e.clientY - c.y;
+        var dx = mx - c.x;
+        var dy = my - c.y;
         var dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < radius) {
           active = true;
-          targetX = e.clientX;
-          targetY = e.clientY + 14;
+          var lead = Math.min(MAX_LEAD, BASE_LEAD + speed * SPEED_TO_LEAD);
+          targetX = mx + dirX * lead;
+          targetY = my + dirY * lead;
           drip.style.opacity = String(1 - Math.pow(dist / radius, 2));
         } else {
           active = false;
@@ -248,9 +374,24 @@
       });
 
       function tick(){
-        currentX += (targetX - currentX) * 0.12;
-        currentY += (targetY - currentY) * 0.12;
+        currentX += (targetX - currentX) * 0.18;
+        currentY += (targetY - currentY) * 0.18;
         drip.style.transform = 'translate(' + currentX + 'px, ' + currentY + 'px) translate(-50%, -50%)';
+
+        if (active) {
+          var t = logoDotTarget();
+          var ddx = currentX - t.x;
+          var ddy = currentY - t.y;
+          var threshold = Math.max(4, t.size * 0.09);
+          if (ddx * ddx + ddy * ddy < threshold * threshold) {
+            var now = performance.now();
+            if (now - lastSparkleAt > SPARKLE_COOLDOWN) {
+              lastSparkleAt = now;
+              spawnSparkles(t.x, t.y);
+            }
+          }
+        }
+
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
