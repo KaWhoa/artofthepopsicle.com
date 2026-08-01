@@ -204,9 +204,9 @@
     position:absolute;
     top:0;
     left:0;
-    width:20px;
-    height:20px;
-    margin:-10px 0 0 -10px;
+    width:40px;
+    height:40px;
+    margin:-20px 0 0 -20px;
     border-radius:50%;
     background:radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,199,44,0.55) 45%, rgba(255,255,255,0) 72%);
     animation:glowPulse 0.5s ease-out forwards;
@@ -216,9 +216,9 @@
     position:absolute;
     top:0;
     left:0;
-    width:9px;
-    height:9px;
-    margin:-4.5px 0 0 -4.5px;
+    width:18px;
+    height:18px;
+    margin:-9px 0 0 -9px;
     clip-path:polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%);
     opacity:0;
     animation:sparkTwinkle 0.75s ease-out forwards;
@@ -317,7 +317,7 @@
         var count = 7;
         for (var i = 0; i < count; i++){
           var angle = (Math.PI * 2 * i / count) + (Math.random() * 0.6 - 0.3);
-          var dist = 20 + Math.random() * 16;
+          var dist = 40 + Math.random() * 32;
           var spark = document.createElement('div');
           spark.className = 'spark';
           spark.style.background = colors[i % colors.length];
