@@ -74,6 +74,7 @@
     position:relative;
     display:inline-block;
     line-height:0;
+    -webkit-tap-highlight-color:transparent;
   }
 
   .name{
@@ -240,10 +241,6 @@
   @media (prefers-reduced-motion: reduce){
     .sparkle-burst{ display:none; }
   }
-
-  .logo-wrap{
-    -webkit-tap-highlight-color:transparent;
-  }
 </style>
 </head>
 <body>
@@ -281,27 +278,12 @@
       var DOT_X_PCT = 0.3974;
       var DOT_Y_PCT = 0.6129;
 
-      var targetX = 0, targetY = 0;
-      var currentX = 0, currentY = 0;
-      var radius = 100;
-      var active = false;
+      // True on touch-primary devices (no hover, coarse pointer) — phones
+      // and tablets. Hybrid laptops with a mouse still get the desktop path.
+      var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
-      // Push-ahead-of-cursor tracking
-      var dirX = 0, dirY = -1;      // last known movement direction (unit vector)
-      var speed = 0;                 // smoothed speed, px/ms
-      var lastMoveX = null, lastMoveY = null, lastMoveT = null;
-      var BASE_LEAD = 12;             // minimum px the dot sits ahead of the cursor, even at rest
-      var MAX_LEAD = 34;              // cap so it doesn't fly off at high speed
-      var SPEED_TO_LEAD = 45;         // how strongly speed extends the lead distance
-
-      // Alignment "easter egg"
       var lastSparkleAt = -Infinity;
       var SPARKLE_COOLDOWN = 1400;
-
-      function logoCenter(){
-        var r = logo.getBoundingClientRect();
-        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-      }
 
       function logoDotTarget(){
         var r = logo.getBoundingClientRect();
@@ -335,19 +317,43 @@
         setTimeout(function(){ burst.remove(); }, 900);
       }
 
-      function tryFireSparkle(x, y, threshold){
+      function fireSparkleWithCooldown(){
+        var now = performance.now();
+        if (now - lastSparkleAt <= SPARKLE_COOLDOWN) return;
+        lastSparkleAt = now;
         var t = logoDotTarget();
-        var ddx = x - t.x;
-        var ddy = y - t.y;
-        if (ddx * ddx + ddy * ddy < threshold * threshold) {
-          var now = performance.now();
-          if (now - lastSparkleAt > SPARKLE_COOLDOWN) {
-            lastSparkleAt = now;
-            spawnSparkles(t.x, t.y);
-            return true;
-          }
-        }
-        return false;
+        spawnSparkles(t.x, t.y);
+      }
+
+      if (isTouch) {
+        // Mobile/tablet: no cursor to trail, so skip the drip dot entirely
+        // and just sparkle whenever the whole icon is tapped.
+        drip.style.display = 'none';
+
+        logo.addEventListener('click', function(){
+          fireSparkleWithCooldown();
+        });
+        return;
+      }
+
+      // --- Desktop only below: trailing dot + hover-alignment sparkle ---
+
+      var targetX = 0, targetY = 0;
+      var currentX = 0, currentY = 0;
+      var radius = 100;
+      var active = false;
+
+      // Push-ahead-of-cursor tracking
+      var dirX = 0, dirY = -1;      // last known movement direction (unit vector)
+      var speed = 0;                 // smoothed speed, px/ms
+      var lastMoveX = null, lastMoveY = null, lastMoveT = null;
+      var BASE_LEAD = 12;             // minimum px the dot sits ahead of the cursor, even at rest
+      var MAX_LEAD = 34;              // cap so it doesn't fly off at high speed
+      var SPEED_TO_LEAD = 45;         // how strongly speed extends the lead distance
+
+      function logoCenter(){
+        var r = logo.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
       }
 
       window.addEventListener('mousemove', function(e){
@@ -392,16 +398,6 @@
         }
       });
 
-      // Touch / tap fallback: there's no cursor to trail on touch devices,
-      // so the easter egg becomes "find and tap the white dot" instead.
-      // The tap zone is sized generously (bigger than a mouse would need)
-      // since fingers are far less precise than a pointer.
-      logo.addEventListener('click', function(e){
-        var t = logoDotTarget();
-        var tapThreshold = Math.max(20, t.size * 0.4);
-        tryFireSparkle(e.clientX, e.clientY, tapThreshold);
-      });
-
       function tick(){
         currentX += (targetX - currentX) * 0.18;
         currentY += (targetY - currentY) * 0.18;
@@ -409,8 +405,12 @@
 
         if (active) {
           var t = logoDotTarget();
-          var hoverThreshold = Math.max(4, t.size * 0.09);
-          tryFireSparkle(currentX, currentY, hoverThreshold);
+          var ddx = currentX - t.x;
+          var ddy = currentY - t.y;
+          var threshold = Math.max(4, t.size * 0.09);
+          if (ddx * ddx + ddy * ddy < threshold * threshold) {
+            fireSparkleWithCooldown();
+          }
         }
 
         requestAnimationFrame(tick);
