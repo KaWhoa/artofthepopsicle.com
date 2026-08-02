@@ -240,6 +240,10 @@
   @media (prefers-reduced-motion: reduce){
     .sparkle-burst{ display:none; }
   }
+
+  .logo-wrap{
+    -webkit-tap-highlight-color:transparent;
+  }
 </style>
 </head>
 <body>
@@ -331,6 +335,21 @@
         setTimeout(function(){ burst.remove(); }, 900);
       }
 
+      function tryFireSparkle(x, y, threshold){
+        var t = logoDotTarget();
+        var ddx = x - t.x;
+        var ddy = y - t.y;
+        if (ddx * ddx + ddy * ddy < threshold * threshold) {
+          var now = performance.now();
+          if (now - lastSparkleAt > SPARKLE_COOLDOWN) {
+            lastSparkleAt = now;
+            spawnSparkles(t.x, t.y);
+            return true;
+          }
+        }
+        return false;
+      }
+
       window.addEventListener('mousemove', function(e){
         var now = performance.now();
         var mx = e.clientX, my = e.clientY;
@@ -373,6 +392,16 @@
         }
       });
 
+      // Touch / tap fallback: there's no cursor to trail on touch devices,
+      // so the easter egg becomes "find and tap the white dot" instead.
+      // The tap zone is sized generously (bigger than a mouse would need)
+      // since fingers are far less precise than a pointer.
+      logo.addEventListener('click', function(e){
+        var t = logoDotTarget();
+        var tapThreshold = Math.max(20, t.size * 0.4);
+        tryFireSparkle(e.clientX, e.clientY, tapThreshold);
+      });
+
       function tick(){
         currentX += (targetX - currentX) * 0.18;
         currentY += (targetY - currentY) * 0.18;
@@ -380,16 +409,8 @@
 
         if (active) {
           var t = logoDotTarget();
-          var ddx = currentX - t.x;
-          var ddy = currentY - t.y;
-          var threshold = Math.max(4, t.size * 0.09);
-          if (ddx * ddx + ddy * ddy < threshold * threshold) {
-            var now = performance.now();
-            if (now - lastSparkleAt > SPARKLE_COOLDOWN) {
-              lastSparkleAt = now;
-              spawnSparkles(t.x, t.y);
-            }
-          }
+          var hoverThreshold = Math.max(4, t.size * 0.09);
+          tryFireSparkle(currentX, currentY, hoverThreshold);
         }
 
         requestAnimationFrame(tick);
